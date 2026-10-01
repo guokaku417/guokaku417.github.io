@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Python 装饰器：从入门到进阶">
+    <title>Python 装饰器：从入门到进阶 | CodeLog</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .post-detail { padding-top: 120px; padding-bottom: 80px; }
+        .post-detail .container { max-width: 780px; margin: 0 auto; }
+        .post-header { margin-bottom: 40px; }
+        .post-header .post-tag { display: inline-block; background: var(--accent-light); color: var(--accent); padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; margin-bottom: 12px; }
+        .post-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); line-height: 1.4; }
+        .post-header .post-meta { color: var(--text-muted); font-size: 0.9rem; }
+        .post-content { color: var(--text-secondary); line-height: 1.9; font-size: 1rem; }
+        .post-content h2 { font-size: 1.4rem; font-weight: 600; margin-top: 36px; margin-bottom: 14px; color: var(--text-primary); }
+        .post-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 28px; margin-bottom: 10px; color: var(--text-primary); }
+        .post-content p { margin-bottom: 16px; }
+        .post-content ul { padding-left: 20px; margin-bottom: 16px; }
+        .post-content li { margin-bottom: 6px; }
+        .post-content li::marker { color: var(--accent); }
+        .post-content code { background: var(--bg-code); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+        .post-content pre { background: var(--code-block-bg); border-radius: 10px; padding: 20px; overflow-x: auto; margin-bottom: 20px; }
+        .post-content pre code { background: none; padding: 0; color: #e0e0e0; font-size: 0.85rem; }
+        .post-content .kw { color: #c792ea; }
+        .post-content .fn { color: #82aaff; }
+        .post-content .str { color: #c3e88d; }
+        .post-content .cm { color: #546e7a; }
+        .post-content .num { color: #f78c6c; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 0.9rem; margin-bottom: 24px; }
+        .back-link:hover { color: var(--accent); }
+        .post-nav { display: flex; justify-content: space-between; margin-top: 60px; padding-top: 30px; border-top: 1px solid var(--border); }
+        .post-nav a { color: var(--accent); text-decoration: none; font-size: 0.95rem; }
+        .post-nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="../index.html" class="logo">~/CodeLog</a>
+            <nav class="nav-links" id="navLinks">
+                <a href="../index.html#home" class="nav-link">首页</a>
+                <a href="../index.html#about" class="nav-link">关于</a>
+                <a href="../index.html#skills" class="nav-link">技能</a>
+                <a href="../index.html#blog" class="nav-link active">博客</a>
+                <a href="../index.html#projects" class="nav-link">项目</a>
+                <a href="../index.html#contact" class="nav-link">联系</a>
+            </nav>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="post-detail">
+        <div class="container">
+            <a href="../index.html#blog" class="back-link">← 返回博客列表</a>
+
+            <div class="post-header">
+                <span class="post-tag">Python</span>
+                <h1>Python 装饰器：从入门到进阶</h1>
+                <div class="post-meta">2026-03-01 · 10 分钟</div>
+            </div>
+
+            <div class="post-content">
+                <p>装饰器是 Python 中非常强大的特性。本文从闭包概念讲起，逐步深入到带参数的装饰器、类装饰器，以及 <code>functools.wraps</code> 的作用。</p>
+
+                <h2>一、预备知识：函数是一等公民</h2>
+                <p>在 Python 中，函数与其他对象一样：</p>
+                <ul>
+                    <li>可以赋值给变量</li>
+                    <li>可以作为参数传递</li>
+                    <li>可以作为函数的返回值</li>
+                </ul>
+
+                <pre><code><span class="kw">def</span> <span class="fn">greet</span>(name):
+    <span class="kw">return</span> <span class="str">f"Hello, {name}!"</span>
+
+<span class="cm"># 函数赋值给变量</span>
+say_hello = greet
+<span class="fn">print</span>(<span class="fn">say_hello</span>(<span class="str">"Alice"</span>))  <span class="cm"># Hello, Alice!</span>
+
+<span class="cm"># 函数作为参数</span>
+<span class="kw">def</span> <span class="fn">call_twice</span>(f, x):
+    <span class="kw">return</span> <span class="fn">f</span>(x), <span class="fn">f</span>(x)
+
+<span class="fn">print</span>(<span class="fn">call_twice</span>(greet, <span class="str">"Bob"</span>))</code></pre>
+
+                <h2>二、闭包</h2>
+                <p>闭包是指一个函数记住了其外部作用域的变量，即使外部函数已经执行完毕：</p>
+                <pre><code><span class="kw">def</span> <span class="fn">make_multiplier</span>(n):
+    <span class="kw">def</span> <span class="fn">multiplier</span>(x):
+        <span class="kw">return</span> x * n
+    <span class="kw">return</span> multiplier
+
+double = <span class="fn">make_multiplier</span>(<span class="num">2</span>)
+triple = <span class="fn">make_multiplier</span>(<span class="num">3</span>)
+
+<span class="fn">print</span>(<span class="fn">double</span>(<span class="num">5</span>))   <span class="cm"># 10</span>
+<span class="fn">print</span>(<span class="fn">triple</span>(<span class="num">5</span>))   <span class="cm"># 15</span></code></pre>
+
+                <p><code>double</code> 记住了 <code>n=2</code>，<code>triple</code> 记住了 <code>n=3</code>——这就是闭包。</p>
+
+                <h2>三、基础装饰器</h2>
+                <p>装饰器本质上就是一个接受函数并返回新函数的闭包：</p>
+
+                <pre><code><span class="kw">def</span> <span class="fn">timer</span>(func):
+    <span class="kw">import</span> time
+
+    <span class="kw">def</span> <span class="fn">wrapper</span>(*args, **kwargs):
+        start = <span class="fn">time.time</span>()
+        result = <span class="fn">func</span>(*args, **kwargs)
+        elapsed = <span class="fn">time.time</span>() - start
+        <span class="fn">print</span>(<span class="str">f"{func.__name__} 执行耗时: {elapsed:.4f}s"</span>)
+        <span class="kw">return</span> result
+
+    <span class="kw">return</span> wrapper
+
+
+<span class="nd">@timer</span>
+<span class="kw">def</span> <span class="fn">slow_function</span>():
+    <span class="kw">import</span> time
+    <span class="fn">time.sleep</span>(<span class="num">1</span>)
+    <span class="kw">return</span> <span class="str">"done"</span>
+
+<span class="fn">slow_function</span>()  <span class="cm"># 输出: slow_function 执行耗时: 1.0004s</span></code></pre>
+
+                <h2>四、functools.wraps</h2>
+                <p>问题：装饰后的函数丢失了原始函数的元信息：</p>
+
+                <pre><code><span class="fn">print</span>(slow_function.__name__)  <span class="cm"># wrapper（不是 slow_function！）</span></code></pre>
+
+                <p>解决方案：使用 <code>functools.wraps</code>：</p>
+
+                <pre><code><span class="kw">import</span> functools
+
+<span class="kw">def</span> <span class="fn">timer</span>(func):
+    <span class="nd">@functools.wraps</span>(func)
+    <span class="kw">def</span> <span class="fn">wrapper</span>(*args, **kwargs):
+        <span class="cm"># ... 同上</span>
+        <span class="kw">return</span> result
+    <span class="kw">return</span> wrapper</code></pre>
+
+                <h2>五、带参数的装饰器</h2>
+                <p>有时候我们需要让装饰器接受参数，这时需要再加一层嵌套：</p>
+
+                <pre><code><span class="kw">def</span> <span class="fn">repeat</span>(times=<span class="num">1</span>):
+    <span class="kw">def</span> <span class="fn">decorator</span>(func):
+        <span class="nd">@functools.wraps</span>(func)
+        <span class="kw">def</span> <span class="fn">wrapper</span>(*args, **kwargs):
+            <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(times):
+                result = <span class="fn">func</span>(*args, **kwargs)
+            <span class="kw">return</span> result
+        <span class="kw">return</span> wrapper
+    <span class="kw">return</span> decorator
+
+
+<span class="nd">@repeat</span>(times=<span class="num">3</span>)
+<span class="kw">def</span> <span class="fn">say</span>(word):
+    <span class="fn">print</span>(word)
+
+<span class="fn">say</span>(<span class="str">"Hello!"</span>)  <span class="cm"># 打印三次 Hello!</span></code></pre>
+
+                <h2>六、类装饰器</h2>
+                <p>除了函数，类也可以作为装饰器：</p>
+
+                <pre><code><span class="kw">class</span> <span class="fn">CountCalls</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, func):
+        <span class="fn">functools.wraps</span>(func)(self)
+        self.func = func
+        self.count = <span class="num">0</span>
+
+    <span class="kw">def</span> <span class="fn">__call__</span>(self, *args, **kwargs):
+        self.count += <span class="num">1</span>
+        <span class="fn">print</span>(<span class="str">f"第 {self.count} 次调用"</span>)
+        <span class="kw">return</span> <span class="fn">self.func</span>(*args, **kwargs)</code></pre>
+
+                <h2>七、装饰器的实际应用</h2>
+                <ul>
+                    <li><strong>日志记录</strong> — 自动记录函数调用参数和返回值</li>
+                    <li><strong>性能分析</strong> — 统计函数执行时间或调用次数</li>
+                    <li><strong>权限校验</strong> — 检查用户是否有权执行操作</li>
+                    <li><strong>缓存</strong> — 缓存函数的计算结果（如 <code>functools.lru_cache</code>）</li>
+                </ul>
+
+                <h2>八、总结</h2>
+                <p>装饰器的本质是<strong>函数的函数</strong>——它接收一个函数，返回一个增强后的函数。掌握闭包是理解装饰器的关键，而 <code>functools.wraps</code> 是编写正确装饰器的必备工具。</p>
+            </div>
+
+            <div class="post-nav">
+                <a href="git-workflow.html">← 上一篇：Git 工作流最佳实践</a>
+                <span></span>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CodeLog. Built with <span class="heart">♥</span> and lots of ☕</p>
+        </div>
+    </footer>
+
+    <button class="back-to-top" id="backToTop" aria-label="回到顶部">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 15l-6-6-6 6"/>
+        </svg>
+    </button>
+
+    <script>
+        const toggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('blog-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        toggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('blog-theme', next);
+        });
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => { backToTop.classList.toggle('visible', window.scrollY > 400); });
+        backToTop.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    </script>
+</body>
+</html>

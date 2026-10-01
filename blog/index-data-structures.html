@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="从红黑树到 B+ 树：索引的数据结构进化史">
+    <title>从红黑树到 B+ 树 | CodeLog</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .post-detail { padding-top: 120px; padding-bottom: 80px; }
+        .post-detail .container { max-width: 780px; margin: 0 auto; }
+        .post-header { margin-bottom: 40px; }
+        .post-header .post-tag { display: inline-block; background: var(--accent-light); color: var(--accent); padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; margin-bottom: 12px; }
+        .post-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); line-height: 1.4; }
+        .post-header .post-meta { color: var(--text-muted); font-size: 0.9rem; }
+        .post-content { color: var(--text-secondary); line-height: 1.9; font-size: 1rem; }
+        .post-content h2 { font-size: 1.4rem; font-weight: 600; margin-top: 36px; margin-bottom: 14px; color: var(--text-primary); }
+        .post-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 28px; margin-bottom: 10px; color: var(--text-primary); }
+        .post-content p { margin-bottom: 16px; }
+        .post-content ul { padding-left: 20px; margin-bottom: 16px; }
+        .post-content li { margin-bottom: 6px; }
+        .post-content li::marker { color: var(--accent); }
+        .post-content code { background: var(--bg-code); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+        .post-content pre { background: var(--code-block-bg); border-radius: 10px; padding: 20px; overflow-x: auto; margin-bottom: 20px; }
+        .post-content pre code { background: none; padding: 0; color: #e0e0e0; font-size: 0.85rem; }
+        .post-content .kw { color: #c792ea; }
+        .post-content .fn { color: #82aaff; }
+        .post-content .str { color: #c3e88d; }
+        .post-content .cm { color: #546e7a; }
+        .post-content .num { color: #f78c6c; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 0.9rem; margin-bottom: 24px; }
+        .back-link:hover { color: var(--accent); }
+        .post-nav { display: flex; justify-content: space-between; margin-top: 60px; padding-top: 30px; border-top: 1px solid var(--border); }
+        .post-nav a { color: var(--accent); text-decoration: none; font-size: 0.95rem; }
+        .post-nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="../index.html" class="logo">~/CodeLog</a>
+            <nav class="nav-links" id="navLinks">
+                <a href="../index.html#home" class="nav-link">首页</a>
+                <a href="../index.html#about" class="nav-link">关于</a>
+                <a href="../index.html#skills" class="nav-link">技能</a>
+                <a href="../index.html#blog" class="nav-link active">博客</a>
+                <a href="../index.html#projects" class="nav-link">项目</a>
+                <a href="../index.html#contact" class="nav-link">联系</a>
+            </nav>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="post-detail">
+        <div class="container">
+            <a href="../index.html#blog" class="back-link">← 返回博客列表</a>
+
+            <div class="post-header">
+                <span class="post-tag">数据结构</span>
+                <h1>从红黑树到 B+ 树：索引的数据结构进化史</h1>
+                <div class="post-meta">2026-03-28 · 10 分钟</div>
+            </div>
+
+            <div class="post-content">
+                <p>数据库索引为什么要用 B+ 树而不是红黑树？本文从二叉搜索树出发，一步步推导出 B+ 树的设计思路，并分析每种数据结构的适用场景。</p>
+
+                <h2>一、二叉搜索树（BST）</h2>
+                <p>BST 是最基础的树形数据结构：左子树所有节点小于根节点，右子树所有节点大于根节点。平均查找复杂度 O(log n)，但最坏情况下退化为链表 O(n)。</p>
+
+                <h2>二、红黑树</h2>
+                <p>红黑树是一种自平衡的二叉搜索树，通过颜色约束保证树的高度不超过 2log(n+1)：</p>
+                <ul>
+                    <li>每个节点是红色或黑色</li>
+                    <li>根节点是黑色</li>
+                    <li>红色节点的子节点必须是黑色</li>
+                    <li>任一节点到其所有叶子节点的路径上的黑色节点数相同</li>
+                </ul>
+                <p>红黑树在内存中表现优异——C++ STL 的 <code>std::map</code> 和 Java 的 <code>TreeMap</code> 都基于红黑树实现。</p>
+
+                <h2>三、为什么数据库不用红黑树？</h2>
+                <p>红黑树虽然好，但它有一个关键问题：<strong>树的高度</strong>。对于海量数据，红黑树的节点数等于数据量，树的高度仍然会增长到 log n。每次查找需要多次磁盘 I/O，而磁盘 I/O 是数据库系统的瓶颈。</p>
+
+                <p>关键在于：红黑树每个节点只存储一个键值，一个磁盘块只能加载少量节点。</p>
+
+                <h2>四、B 树</h2>
+                <p>B 树的核心思想：<strong>每个节点存储多个键值</strong>，从而大幅降低树的高度。</p>
+                <pre><code><span class="cm">// B 树节点的简化表示</span>
+<span class="kw">class</span> BTreeNode {
+    keys: [k1, k2, ..., km];        <span class="cm">// 有序键</span>
+    children: [c0, c1, ..., cm];     <span class="cm">// 子节点指针</span>
+    leaf: <span class="kw">boolean</span>;                  <span class="cm">// 是否为叶子节点</span>
+}</code></pre>
+
+                <p>一个 3 阶 B 树每个节点可存 2 个键，树的高度约为 log<sub>3</sub>(n)。对于 100 万条数据，红黑树需要约 20 层，B 树只需要约 10 层。</p>
+
+                <h2>五、B+ 树</h2>
+                <p>B+ 树是 B 树的进一步优化，也是现代数据库的主流索引结构：</p>
+                <ul>
+                    <li><strong>非叶子节点只存键，不存数据</strong> — 每个节点可以存更多键，树更矮</li>
+                    <li><strong>叶子节点通过指针串联</strong> — 范围查询时无需回溯，顺序遍历效率极高</li>
+                    <li>所有数据都在叶子节点 — 每次查询的 I/O 次数稳定</li>
+                </ul>
+
+                <pre><code><span class="cm">-- MySQL InnoDB 默认使用 B+ 树索引</span>
+<span class="kw">CREATE TABLE</span> users (
+    id <span class="kw">INT PRIMARY KEY</span>,
+    name <span class="kw">VARCHAR</span>(<span class="num">100</span>),
+    age <span class="kw">INT</span>,
+    <span class="kw">INDEX</span> idx_age (age)
+);
+
+<span class="cm">-- 主键索引（聚簇索引）：叶子节点存储整行数据</span>
+<span class="cm">-- 普通索引（二级索引）：叶子节点存储主键值</span></code></pre>
+
+                <h2>六、总结对比</h2>
+                <ul>
+                    <li><strong>红黑树</strong> — 适合内存场景，数据量不大，插入删除频繁</li>
+                    <li><strong>B 树</strong> — 适合磁盘场景，每个节点存多个键，树更矮</li>
+                    <li><strong>B+ 树</strong> — B 树的进化版，范围查询极快，磁盘 I/O 稳定</li>
+                </ul>
+                <p>选择什么数据结构，取决于你的<strong>使用场景</strong>和<strong>硬件特性</strong>——这永远是数据结构与算法设计的第一原则。</p>
+            </div>
+
+            <div class="post-nav">
+                <a href="csapp-notes.html">← 上一篇：CSAPP 读书笔记</a>
+                <a href="git-workflow.html">下一篇：Git 工作流最佳实践 →</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CodeLog. Built with <span class="heart">♥</span> and lots of ☕</p>
+        </div>
+    </footer>
+
+    <button class="back-to-top" id="backToTop" aria-label="回到顶部">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 15l-6-6-6 6"/>
+        </svg>
+    </button>
+
+    <script>
+        const toggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('blog-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        toggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('blog-theme', next);
+        });
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => { backToTop.classList.toggle('visible', window.scrollY > 400); });
+        backToTop.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    </script>
+</body>
+</html>

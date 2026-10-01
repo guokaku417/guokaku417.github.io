@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="React Hooks 原理浅析：useState 与 useEffect">
+    <title>React Hooks 原理浅析 | CodeLog</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .post-detail { padding-top: 120px; padding-bottom: 80px; }
+        .post-detail .container { max-width: 780px; margin: 0 auto; }
+        .post-header { margin-bottom: 40px; }
+        .post-header .post-tag { display: inline-block; background: var(--accent-light); color: var(--accent); padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; margin-bottom: 12px; }
+        .post-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); line-height: 1.4; }
+        .post-header .post-meta { color: var(--text-muted); font-size: 0.9rem; }
+        .post-content { color: var(--text-secondary); line-height: 1.9; font-size: 1rem; }
+        .post-content h2 { font-size: 1.4rem; font-weight: 600; margin-top: 36px; margin-bottom: 14px; color: var(--text-primary); }
+        .post-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 28px; margin-bottom: 10px; color: var(--text-primary); }
+        .post-content p { margin-bottom: 16px; }
+        .post-content ul { padding-left: 20px; margin-bottom: 16px; }
+        .post-content li { margin-bottom: 6px; }
+        .post-content li::marker { color: var(--accent); }
+        .post-content code { background: var(--bg-code); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+        .post-content pre { background: var(--code-block-bg); border-radius: 10px; padding: 20px; overflow-x: auto; margin-bottom: 20px; }
+        .post-content pre code { background: none; padding: 0; color: #e0e0e0; font-size: 0.85rem; }
+        .post-content .kw { color: #c792ea; }
+        .post-content .fn { color: #82aaff; }
+        .post-content .str { color: #c3e88d; }
+        .post-content .cm { color: #546e7a; }
+        .post-content .num { color: #f78c6c; }
+        .post-content .at { color: #f07178; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 0.9rem; margin-bottom: 24px; }
+        .back-link:hover { color: var(--accent); }
+        .post-nav { display: flex; justify-content: space-between; margin-top: 60px; padding-top: 30px; border-top: 1px solid var(--border); }
+        .post-nav a { color: var(--accent); text-decoration: none; font-size: 0.95rem; }
+        .post-nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="../index.html" class="logo">~/CodeLog</a>
+            <nav class="nav-links" id="navLinks">
+                <a href="../index.html#home" class="nav-link">首页</a>
+                <a href="../index.html#about" class="nav-link">关于</a>
+                <a href="../index.html#skills" class="nav-link">技能</a>
+                <a href="../index.html#blog" class="nav-link active">博客</a>
+                <a href="../index.html#projects" class="nav-link">项目</a>
+                <a href="../index.html#contact" class="nav-link">联系</a>
+            </nav>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="post-detail">
+        <div class="container">
+            <a href="../index.html#blog" class="back-link">← 返回博客列表</a>
+
+            <div class="post-header">
+                <span class="post-tag">前端</span>
+                <h1>React Hooks 原理浅析：useState 与 useEffect</h1>
+                <div class="post-meta">2026-04-20 · 12 分钟</div>
+            </div>
+
+            <div class="post-content">
+                <p>Hooks 是 React 16.8 引入的革命性特性，它让我们在函数组件中使用 state 和生命周期功能。本文将从源码层面解析 <code>useState</code> 和 <code>useEffect</code> 的实现机制。</p>
+
+                <h2>一、Hooks 的核心：链表</h2>
+                <p>React 在函数组件内部维护了一个 <strong>hooks 链表</strong>。每次调用 hook（如 <code>useState</code>）时，React 都会创建或读取链表中的一个节点：</p>
+                <pre><code><span class="cm">// 简化版 Hook 节点结构</span>
+type Hook = {
+    memoizedState: any,    <span class="cm">// 当前状态值</span>
+    next: Hook | null,      <span class="cm">// 指向下一个 hook</span>
+};
+
+<span class="cm">// React 内部维护的当前 fiber</span>
+let currentlyRenderingFiber = ...;
+let workInProgressHook = null;
+let hookIndex = 0;</code></pre>
+
+                <p>为什么 Hooks 不能放在条件语句中？因为 React 依赖<strong>调用顺序</strong>来匹配每次渲染中的 hook 和链表节点。如果条件执行导致某次渲染少调用了一个 hook，链表就错位了。</p>
+
+                <h2>二、useState 的实现</h2>
+                <pre><code><span class="kw">function</span> <span class="fn">useState</span>(initialState) {
+    <span class="cm">// 获取当前 hook 节点</span>
+    <span class="kw">const</span> hook = <span class="fn">getHook</span>(hookIndex++);
+
+    <span class="kw">if</span> (hook.memoizedState === <span class="kw">undefined</span>) {
+        hook.memoizedState = <span class="kw">typeof</span> initialState === <span class="str">'function'</span>
+            ? <span class="fn">initialState</span>()
+            : initialState;
+    }
+
+    <span class="kw">const</span> dispatch = <span class="fn">createDispatcher</span>(hook);
+    <span class="kw">return</span> [hook.memoizedState, dispatch];
+}</code></pre>
+
+                <p>当调用 <code>setState</code> 时，React 会将更新放入一个队列中，并在下一次渲染时重新计算状态。如果多次调用 <code>setState</code>，React 会批量合并更新。</p>
+
+                <h2>三、useEffect 的实现</h2>
+                <pre><code><span class="kw">function</span> <span class="fn">useEffect</span>(create, deps) {
+    <span class="kw">const</span> hook = <span class="fn">getHook</span>(hookIndex++);
+
+    <span class="kw">const</span> prevDeps = hook.memoizedState;
+
+    <span class="kw">if</span> (<span class="fn">areDepsEqual</span>(prevDeps, deps)) {
+        <span class="kw">return</span>;  <span class="cm">// 依赖没变，跳过</span>
+    }
+
+    <span class="cm">// 在浏览器绘制后执行副作用</span>
+    <span class="fn">scheduleEffect</span>(create);
+    hook.memoizedState = deps;
+}</code></pre>
+
+                <p>关键点：</p>
+                <ul>
+                    <li><strong>依赖比较</strong> — 使用 <code>Object.is</code> 逐个比较依赖项</li>
+                    <li><strong>执行时机</strong> — useEffect 在浏览器完成布局和绘制后<strong>异步</strong>执行</li>
+                    <li><strong>清理函数</strong> — 如果 create 返回一个函数，React 会在重新执行 effect 前或组件卸载时调用它</li>
+                </ul>
+
+                <h2>四、为什么 Hooks 改变了 React 的编程范式</h2>
+                <ul>
+                    <li><strong>逻辑复用</strong> — 自定义 Hooks 让状态逻辑的复用变得简单，不再需要 HOC 或 Render Props</li>
+                    <li><strong>关注点分离</strong> — 你不再需要按照生命周期拆分代码，而是按照功能模块来组织</li>
+                    <li><strong>减少心智负担</strong> — 不再需要频繁地在类方法之间切换注意力</li>
+                </ul>
+
+                <h2>五、总结</h2>
+                <p>理解 Hooks 的原理并不复杂，关键在于记住：React 通过<strong>链表的顺序</strong>来匹配每次渲染中的 Hooks 调用。这个设计简洁而优雅，也解释了为什么 Hooks 有"不能放在条件语句中"这条规则。</p>
+            </div>
+
+            <div class="post-nav">
+                <a href="dp-intro.html">← 上一篇：动态规划入门</a>
+                <a href="csapp-notes.html">下一篇：CSAPP 读书笔记 →</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CodeLog. Built with <span class="heart">♥</span> and lots of ☕</p>
+        </div>
+    </footer>
+
+    <button class="back-to-top" id="backToTop" aria-label="回到顶部">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 15l-6-6-6 6"/>
+        </svg>
+    </button>
+
+    <script>
+        const toggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('blog-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        toggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('blog-theme', next);
+        });
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => { backToTop.classList.toggle('visible', window.scrollY > 400); });
+        backToTop.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    </script>
+</body>
+</html>
