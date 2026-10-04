@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CSAPP 读书笔记：深入了解计算机系统">
+    <title>CSAPP 读书笔记 | CodeLog</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .post-detail { padding-top: 120px; padding-bottom: 80px; }
+        .post-detail .container { max-width: 780px; margin: 0 auto; }
+        .post-header { margin-bottom: 40px; }
+        .post-header .post-tag { display: inline-block; background: var(--accent-light); color: var(--accent); padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; margin-bottom: 12px; }
+        .post-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); line-height: 1.4; }
+        .post-header .post-meta { color: var(--text-muted); font-size: 0.9rem; }
+        .post-content { color: var(--text-secondary); line-height: 1.9; font-size: 1rem; }
+        .post-content h2 { font-size: 1.4rem; font-weight: 600; margin-top: 36px; margin-bottom: 14px; color: var(--text-primary); }
+        .post-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 28px; margin-bottom: 10px; color: var(--text-primary); }
+        .post-content p { margin-bottom: 16px; }
+        .post-content ul { padding-left: 20px; margin-bottom: 16px; }
+        .post-content li { margin-bottom: 6px; }
+        .post-content li::marker { color: var(--accent); }
+        .post-content code { background: var(--bg-code); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+        .post-content pre { background: var(--code-block-bg); border-radius: 10px; padding: 20px; overflow-x: auto; margin-bottom: 20px; }
+        .post-content pre code { background: none; padding: 0; color: #e0e0e0; font-size: 0.85rem; }
+        .post-content .kw { color: #c792ea; }
+        .post-content .fn { color: #82aaff; }
+        .post-content .str { color: #c3e88d; }
+        .post-content .cm { color: #546e7a; }
+        .post-content .num { color: #f78c6c; }
+        .post-content .asm { color: #ffcb6b; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 0.9rem; margin-bottom: 24px; }
+        .back-link:hover { color: var(--accent); }
+        .post-nav { display: flex; justify-content: space-between; margin-top: 60px; padding-top: 30px; border-top: 1px solid var(--border); }
+        .post-nav a { color: var(--accent); text-decoration: none; font-size: 0.95rem; }
+        .post-nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="../index.html" class="logo">郭卡酷/CodeLog</a>
+            <nav class="nav-links" id="navLinks">
+                <a href="../index.html#home" class="nav-link">首页</a>
+                <a href="../index.html#about" class="nav-link">关于</a>
+                <a href="../index.html#skills" class="nav-link">技能</a>
+                <a href="../index.html#blog" class="nav-link active">博客</a>
+                <a href="../index.html#projects" class="nav-link">项目</a>
+                <a href="../index.html#contact" class="nav-link">联系</a>
+            </nav>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="post-detail">
+        <div class="container">
+            <a href="../index.html#blog" class="back-link">← 返回博客列表</a>
+
+            <div class="post-header">
+                <span class="post-tag">系统</span>
+                <h1>CSAPP 读书笔记：深入了解计算机系统</h1>
+                <div class="post-meta">2026-04-10 · 15 分钟</div>
+            </div>
+
+            <div class="post-content">
+                <p>CSAPP（Computer Systems: A Programmer's Perspective）是计算机系统方向的经典教材。本文分享我在阅读过程中的核心收获，从信息的表示到程序的机器级表示，带你俯瞰计算机系统的全貌。</p>
+
+                <h2>一、信息的表示</h2>
+                <p>计算机中所有的信息——数字、文本、图像、指令——都以二进制表示。这看似简单，但其中有很多容易被忽视的细节。</p>
+
+                <h3>整数表示</h3>
+                <p>大多数编程语言中的整数使用补码表示。补码的好处在于加法和减法可以使用同一套硬件电路。理解补码需要记住：最高位的权重是负的。</p>
+                <pre><code><span class="cm">// 无符号整数的最大值</span>
+<span class="kw">unsigned</span> <span class="kw">char</span> a = <span class="num">255</span>;  <span class="cm">// 0xFF</span>
+
+<span class="cm">// 有符号整数的最大值</span>
+<span class="kw">signed</span> <span class="kw">char</span> b = <span class="num">127</span>;   <span class="cm">// 0x7F</span>
+
+<span class="cm">// 有符号整数 -1 的表示</span>
+<span class="kw">signed</span> <span class="kw">char</span> c = <span class="num">-1</span>;    <span class="cm">// 0xFF（和 255 的位模式相同！）</span></code></pre>
+
+                <p>这就是为什么当把 <code>-1</code> 赋值给 <code>unsigned int</code> 时会得到一个非常大的正数——位模式没有变，但解释方式变了。</p>
+
+                <h2>二、程序的机器级表示</h2>
+                <p>编译器将 C 代码翻译为汇编指令，汇编器再将汇编指令翻译为机器码。理解汇编能帮助我们写出更高效的代码。</p>
+
+                <h3>寄存器与栈</h3>
+                <pre><code><span class="cm">// 一个简单的 C 函数</span>
+<span class="kw">int</span> <span class="fn">add</span>(<span class="kw">int</span> a, <span class="kw">int</span> b) {
+    <span class="kw">return</span> a + b;
+}
+
+<span class="cm">// 对应的 x86-64 汇编</span>
+<span class="fn">add</span>:
+    <span class="asm">push</span>   rbp
+    <span class="asm">mov</span>    rbp, rsp
+    <span class="asm">mov</span>    DWORD PTR [rbp-<span class="num">4</span>], edi   <span class="cm">; 参数 a</span>
+    <span class="asm">mov</span>    DWORD PTR [rbp-<span class="num">8</span>], esi   <span class="cm">; 参数 b</span>
+    <span class="asm">mov</span>    eax, DWORD PTR [rbp-<span class="num">4</span>]
+    <span class="asm">add</span>    eax, DWORD PTR [rbp-<span class="num">8</span>]
+    <span class="asm">pop</span>    rbp
+    <span class="asm">ret</span></code></pre>
+
+                <h2>三、存储器层次结构</h2>
+                <p>理解存储器层次结构是写出高性能程序的关键：</p>
+                <ul>
+                    <li><strong>寄存器</strong> — 速度最快（1 个时钟周期），容量最小</li>
+                    <li><strong>L1 / L2 / L3 缓存</strong> — 速度逐级递减，容量逐级增大</li>
+                    <li><strong>主存（RAM）</strong> — 速度较慢（约 100 个时钟周期）</li>
+                    <li><strong>磁盘</strong> — 速度极慢（约千万个时钟周期）</li>
+                </ul>
+
+                <p>缓存友好的代码模式：</p>
+                <pre><code><span class="cm">// 缓存友好：按行遍历（空间局部性好）</span>
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; N; i++)
+    <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; N; j++)
+        sum += a[i][j];
+
+<span class="cm">// 缓存不友好：按列遍历（每次访问都跨越行）</span>
+<span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; N; j++)
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; N; i++)
+        sum += a[i][j];</code></pre>
+
+                <h2>四、链接</h2>
+                <p>链接是将各个目标文件合并为可执行文件的过程。理解链接能帮助你解决编译时的"未定义引用"和"重定义"错误。</p>
+                <p>关键概念：</p>
+                <ul>
+                    <li><strong>符号解析</strong> — 将每个符号引用关联到一个符号定义</li>
+                    <li><strong>重定位</strong> — 为每个符号分配运行时地址</li>
+                    <li><strong>静态链接 vs 动态链接</strong> — 静态链接将库代码复制到可执行文件中；动态链接在运行时才加载共享库</li>
+                </ul>
+
+                <h2>五、总结</h2>
+                <p>CSAPP 的每一章都值得反复阅读。它不仅教会你计算机系统的工作原理，更重要的是培养你从系统角度思考问题的能力——这对写出高效、可靠的代码至关重要。</p>
+            </div>
+
+            <div class="post-nav">
+                <a href="react-hooks.html">← 上一篇：React Hooks 原理浅析</a>
+                <a href="index-data-structures.html">下一篇：从红黑树到 B+ 树 →</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CodeLog. Built with <span class="heart">♥</span> and lots of ☕</p>
+        </div>
+    </footer>
+
+    <button class="back-to-top" id="backToTop" aria-label="回到顶部">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 15l-6-6-6 6"/>
+        </svg>
+    </button>
+
+    <script>
+        const toggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('blog-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        toggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('blog-theme', next);
+        });
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => { backToTop.classList.toggle('visible', window.scrollY > 400); });
+        backToTop.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    </script>
+</body>
+</html>

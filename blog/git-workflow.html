@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Git 工作流最佳实践：让协作更高效">
+    <title>Git 工作流最佳实践 | CodeLog</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .post-detail { padding-top: 120px; padding-bottom: 80px; }
+        .post-detail .container { max-width: 780px; margin: 0 auto; }
+        .post-header { margin-bottom: 40px; }
+        .post-header .post-tag { display: inline-block; background: var(--accent-light); color: var(--accent); padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; margin-bottom: 12px; }
+        .post-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); line-height: 1.4; }
+        .post-header .post-meta { color: var(--text-muted); font-size: 0.9rem; }
+        .post-content { color: var(--text-secondary); line-height: 1.9; font-size: 1rem; }
+        .post-content h2 { font-size: 1.4rem; font-weight: 600; margin-top: 36px; margin-bottom: 14px; color: var(--text-primary); }
+        .post-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 28px; margin-bottom: 10px; color: var(--text-primary); }
+        .post-content p { margin-bottom: 16px; }
+        .post-content ul { padding-left: 20px; margin-bottom: 16px; }
+        .post-content li { margin-bottom: 6px; }
+        .post-content li::marker { color: var(--accent); }
+        .post-content code { background: var(--bg-code); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+        .post-content pre { background: var(--code-block-bg); border-radius: 10px; padding: 20px; overflow-x: auto; margin-bottom: 20px; }
+        .post-content pre code { background: none; padding: 0; color: #e0e0e0; font-size: 0.85rem; }
+        .post-content .kw { color: #c792ea; }
+        .post-content .fn { color: #82aaff; }
+        .post-content .str { color: #c3e88d; }
+        .post-content .cm { color: #546e7a; }
+        .post-content .num { color: #f78c6c; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 0.9rem; margin-bottom: 24px; }
+        .back-link:hover { color: var(--accent); }
+        .post-nav { display: flex; justify-content: space-between; margin-top: 60px; padding-top: 30px; border-top: 1px solid var(--border); }
+        .post-nav a { color: var(--accent); text-decoration: none; font-size: 0.95rem; }
+        .post-nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="../index.html" class="logo">郭卡酷/CodeLog</a>
+            <nav class="nav-links" id="navLinks">
+                <a href="../index.html#home" class="nav-link">首页</a>
+                <a href="../index.html#about" class="nav-link">关于</a>
+                <a href="../index.html#skills" class="nav-link">技能</a>
+                <a href="../index.html#blog" class="nav-link active">博客</a>
+                <a href="../index.html#projects" class="nav-link">项目</a>
+                <a href="../index.html#contact" class="nav-link">联系</a>
+            </nav>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="post-detail">
+        <div class="container">
+            <a href="../index.html#blog" class="back-link">← 返回博客列表</a>
+
+            <div class="post-header">
+                <span class="post-tag">工具</span>
+                <h1>Git 工作流最佳实践：让协作更高效</h1>
+                <div class="post-meta">2026-03-15 · 7 分钟</div>
+            </div>
+
+            <div class="post-content">
+                <p>团队协作中 Git 的用法至关重要。本文介绍几种主流的 Git 工作流（Git Flow、GitHub Flow），并分享日常开发中的实用技巧。</p>
+
+                <h2>一、Git Flow</h2>
+                <p>Git Flow 是较早提出的经典工作流，分支角色清晰：</p>
+                <ul>
+                    <li><strong>main</strong> — 生产分支，始终保持可部署状态</li>
+                    <li><strong>develop</strong> — 开发主分支，汇集所有已完成的功能</li>
+                    <li><strong>feature/*</strong> — 功能分支，从 develop 分出，完成后合并回 develop</li>
+                    <li><strong>release/*</strong> — 发布分支，从 develop 分出，用于准备发布版本</li>
+                    <li><strong>hotfix/*</strong> — 紧急修复分支，从 main 分出，修复后合并回 main 和 develop</li>
+                </ul>
+
+                <pre><code><span class="cm"># 创建功能分支</span>
+git checkout -b feature/user-auth develop
+
+<span class="cm"># 完成功能后合并</span>
+git checkout develop
+git merge --no-ff feature/user-auth
+
+<span class="cm"># 创建发布分支</span>
+git checkout -b release/1.2.0 develop</code></pre>
+
+                <p>适合：有固定发布周期的项目，需要严格的版本管理。</p>
+
+                <h2>二、GitHub Flow</h2>
+                <p>GitHub Flow 更加轻量，适合持续部署：</p>
+                <ul>
+                    <li>只有一个长期分支 <strong>main</strong></li>
+                    <li>所有开发在 <strong>feature 分支</strong>上进行</li>
+                    <li>通过 <strong>Pull Request</strong> 进行代码审查</li>
+                    <li>合并后立即部署</li>
+                </ul>
+
+                <pre><code><span class="cm"># 1. 从 main 创建分支</span>
+git checkout -b fix-login-bug
+
+<span class="cm"># 2. 提交改动</span>
+git commit -m <span class="str">"fix: 修复登录状态的 token 过期处理"</span>
+
+<span class="cm"># 3. 推送到远程并创建 PR</span>
+git push origin fix-login-bug
+<span class="cm"># → 在 GitHub 上创建 Pull Request</span>
+
+<span class="cm"># 4. 代码审查通过后合并</span>
+<span class="cm"># → 合并后删除远程分支</span></code></pre>
+
+                <p>适合：持续交付/部署的项目，团队规模较小。</p>
+
+                <h2>三、Commit 规范</h2>
+                <p>好的 commit message 能让项目历史清晰可读。推荐使用 <strong>Conventional Commits</strong> 规范：</p>
+                <pre><code>&lt;type&gt;: &lt;简短描述&gt;
+
+[可选的详细描述]
+
+[可选的 footer]
+</code></pre>
+
+                <p>常用的 type 前缀：</p>
+                <ul>
+                    <li><code>feat</code> — 新功能</li>
+                    <li><code>fix</code> — 修复 bug</li>
+                    <li><code>refactor</code> — 重构代码</li>
+                    <li><code>docs</code> — 文档变更</li>
+                    <li><code>style</code> — 代码格式调整</li>
+                    <li><code>test</code> — 测试相关</li>
+                    <li><code>chore</code> — 构建/工具链变更</li>
+                </ul>
+
+                <h2>四、实用技巧</h2>
+                <h3>交互式变基（Interactive Rebase）</h3>
+                <pre><code><span class="cm"># 合并最近 3 个 commit</span>
+git rebase -i HEAD~3
+
+<span class="cm"># 使用 squash/pick 来合并或保留提交</span></code></pre>
+
+                <h3>stash 暂存</h3>
+                <pre><code><span class="cm"># 暂存当前改动（切换到其他分支）</span>
+git stash push -m <span class="str">"WIP: 登录模块重构"</span>
+
+<span class="cm"># 恢复暂存</span>
+git stash pop</code></pre>
+
+                <h2>五、总结</h2>
+                <p>选择工作流时，没有银弹。关键是根据<strong>团队规模</strong>、<strong>发布频率</strong>和<strong>项目复杂度</strong>来选择合适的方案。无论选择哪种工作流，保持一致的 commit 规范和执行良好的代码审查流程，才是团队协作效率的真正保障。</p>
+            </div>
+
+            <div class="post-nav">
+                <a href="index-data-structures.html">← 上一篇：从红黑树到 B+ 树</a>
+                <a href="python-decorators.html">下一篇：Python 装饰器 →</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CodeLog. Built with <span class="heart">♥</span> and lots of ☕</p>
+        </div>
+    </footer>
+
+    <button class="back-to-top" id="backToTop" aria-label="回到顶部">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 15l-6-6-6 6"/>
+        </svg>
+    </button>
+
+    <script>
+        const toggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('blog-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        toggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('blog-theme', next);
+        });
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => { backToTop.classList.toggle('visible', window.scrollY > 400); });
+        backToTop.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    </script>
+</body>
+</html>
